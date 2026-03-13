@@ -35,6 +35,9 @@ git init
 # Start Claude Code
 claude
 
+# Kick it off
+> init
+
 # Claude will ask "What do you want to build?" — go from there.
 ```
 

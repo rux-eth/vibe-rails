@@ -8,7 +8,7 @@
 
 This is a fresh project created from the **vibe-rails** template. The project has not been initialized yet.
 
-**Your first action**: Ask the user **"What do you want to build?"**
+**Trigger**: When the user sends "init", "start", "begin", "hello", "hi", or any first message, check the status marker above. If it says `uninitialized`, ask the user **"What do you want to build?"**
 
 Then follow these steps exactly:
 
