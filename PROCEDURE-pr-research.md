@@ -72,15 +72,19 @@ Research findings are appended to the PR file itself under the `## Research find
 
 ### Phase 3: Run the Research
 
-**Goal**: Answer the must-answer questions using reputable sources.
+**Goal**: Answer the must-answer questions using reputable sources, presenting evidence for AND against each candidate option without bias.
 
-Rules:
-- Parallel agents for independent questions; sequential for dependent ones
-- Every finding cites **reputable sources** (per `docs/CONSTRAINTS.md`)
-- Every finding is labeled with its epistemic status:
-  - **Proven** — widely deployed with evidence
-  - **Convention** — common practice but not rigorously proven
-  - **Best-guess-given-constraints** — flag explicitly
+**Rules** (non-negotiable):
+
+- **Web search is mandatory** for every must-answer question. Dispatch at least one research agent with `WebSearch` / `WebFetch` capability per independent question. Internal codebase reading, prior design-log citations, or LLM general knowledge alone is not sufficient.
+- **Reputable sources only** (per `docs/CONSTRAINTS.md`): production system documentation, official framework source on GitHub, RFCs, published post-mortems / engineering blog posts from serious teams, battle-tested OSS with meaningful adoption. Not sufficient: marketing pages, random StackOverflow answers, personal blogs without engineering weight, LLM intuition dressed up as "common knowledge."
+- **Unbiased presentation**: every finding MUST include at least one alternative / competing option with its own cited evidence — not just support for a preferred answer. Actively search for disconfirming evidence against the leaning option. If genuinely none exists after search, say so explicitly and record the search attempts made.
+- **Pros/cons for each option** — structured, cited, with concrete implications (performance, correctness, ergonomics, maintainability, security). Avoid vague adjectives ("clean", "simple") — describe the specific technical tradeoff.
+- Parallel agents for independent questions; sequential for dependent ones.
+- Every finding labeled with its epistemic status:
+  - **Proven** — widely deployed with direct cited evidence (production source, RFC, post-mortem showing the choice works / fails).
+  - **Convention** — common practice in cited production systems, but without rigorous proof. **Must cite at least 2 independent systems using this convention.** Single-source "convention" is not allowed.
+  - **Best-guess-given-constraints** — explicitly flagged when evidence is thin or unavailable after genuine search. Not a default.
 
 **Output** (appended to PR's `## Research findings` section):
 
@@ -88,20 +92,40 @@ Rules:
 ### Findings
 
 **Q1: [question text]**
-- **Answer**: [concrete answer]
-- **Status**: proven / convention / best-guess
-- **Sources**: [citations]
-- **Notes**: [caveats or tradeoffs]
 
-**Q2: [question text]**
-- ...
+*Options considered:*
+- **Option A: [name]** — [one-line summary]
+  - Sources: [cited URLs]
+  - Pros: [concrete list, each tied to a specific technical consequence]
+  - Cons: [concrete list, same standard]
+- **Option B: [name]** — [one-line summary]
+  - Sources: [cited URLs]
+  - Pros: [...]
+  - Cons: [...]
+- [Option C, ...]
+
+*Disconfirming evidence sought:*
+- [What counter-arguments / failure modes / known drawbacks were searched for, and what was found — or "none found after searching [specific queries / sources]"]
+
+*Recommendation:* Option [X]
+- **Status**: proven / convention / best-guess-given-constraints
+- **Why**: [reasoning grounded in the pros/cons above]
+- **Risks accepted**: [explicit cons of the chosen option that we're living with]
 ```
 
-**Exit criteria**: every must-answer question has a cited answer with status label.
+**Exit criteria**: every must-answer question has ≥2 cited options with pros/cons, an explicit disconfirming-evidence section, and a recommendation with status label backed by the sources cited.
 
 ### Phase 4: Synthesis
 
-**Goal**: Reconcile findings with the PR spec and the broader project docs.
+**Goal**: Reconcile findings with the PR spec, the codebase (if backfilling an already-merged PR), and the broader project docs.
+
+**Research Outcome Branch** (determine BEFORE running the synthesis steps below):
+
+- **Confirm**: findings support the current spec / shipped code. Proceed with the synthesis steps; update doc sections with the cited findings.
+- **Amend**: findings reveal a significant drawback or a better alternative to what's in the spec / shipped code. **STOP the synthesis. Present findings + amendment options to the user** (keep as-is with documented risk / change per cited recommendation / escalate further). Resume only after an explicit user decision.
+- **Escalate**: findings invalidate the PR's premise entirely. **STOP.** Loop to `PROCEDURE-design-planning.md`.
+
+Synthesis steps below execute only on a **Confirm** outcome, or on an **Amend** outcome after the user has approved the specific amendment.
 
 1. What changed vs. the PR's original spec? Update the PR file's scope/verification sections
 2. Does anything propagate back to `docs/ARCHITECTURE.md` or `docs/CONSTRAINTS.md`? Update them in the same commit
@@ -113,8 +137,10 @@ Rules:
 ```markdown
 ### Synthesis
 
+**Outcome**: Confirm / Amend / Escalate — [one-line rationale]
+
 **Changes to this PR** from research:
-- [Specific change, e.g., "Library choice locked to X instead of Y"]
+- [Specific change, e.g., "Library choice locked to X instead of Y", or "none — findings confirm original spec"]
 
 **Changes to ARCHITECTURE.md**:
 - [None, or specific section updates committed alongside]
@@ -161,6 +187,9 @@ Rules:
 - **Padding scope** — researching nice-to-haves during a PR-focused round. Defer them to their own research round.
 - **Drift between research and docs** — when research changes a decision, `ARCHITECTURE.md` / `CONSTRAINTS.md` / `DESIGN-log.md` MUST update in the same commit.
 - **Skipping state assessment for research-backed PRs** — state may have drifted. Phase 1 always runs; Phases 2-4 may be light if no drift is found.
+- **Confirmation bias** — cherry-picking sources that support a predetermined answer. Phase 3 requires ≥1 alternative with pros/cons, an explicit disconfirming-evidence search, and honest reporting when the preferred option has real drawbacks.
+- **LLM intuition dressed as "convention"** — labeling a decision "convention" without cited production-system examples. If only general knowledge supports a claim, it must be labeled `best-guess-given-constraints` and the risk flagged.
+- **Silent amendment** — updating code or docs to align with research without explicit user decision when research reveals an amendment is warranted. Phase 4's Outcome Branch is mandatory; the user must be informed and approve any code change the research suggests.
 
 ## Time-decay policy
 
